@@ -1,4 +1,4 @@
-const CACHE_NAME = 'comparch-v1';
+const CACHE_NAME = 'comparch-v2';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -34,6 +34,10 @@ self.addEventListener('activate', (event) => {
 
 // Fetch Assets (Cache-First strategy with Network Fallback)
 self.addEventListener('fetch', (event) => {
+  // Only handle GET requests with http/https protocols (ignore chrome-extension://, edge-extension://, etc.)
+  if (event.request.method !== 'GET') return;
+  if (!event.request.url.startsWith('http://') && !event.request.url.startsWith('https://')) return;
+
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       if (cachedResponse) {
@@ -50,7 +54,7 @@ self.addEventListener('fetch', (event) => {
         return networkResponse;
       });
     }).catch(() => {
-      if (event.request.headers.get('accept').includes('text/html')) {
+      if (event.request.headers && event.request.headers.get('accept') && event.request.headers.get('accept').includes('text/html')) {
         return caches.match('./index.html');
       }
     })

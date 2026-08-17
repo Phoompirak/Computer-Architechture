@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CompArch Suite - Automated Test Runner</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: #f8fafc;
+            color: #0f172a;
+            padding: 30px 20px;
+            display: flex;
+            justify-content: center;
+        }
+        .runner-container {
+            width: 100%;
+            max-width: 800px;
+            background: #ffffff;
+            border-radius: 16px;
+            border: 1.5px solid #e2e8f0;
+            padding: 24px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1.5px solid #f1f5f9;
+        }
+        .header h1 { font-size: 1.3rem; font-weight: 800; color: #1e293b; }
+        .score-box {
+            display: flex;
+            gap: 12px;
+            font-size: 0.95rem;
+            font-weight: 700;
+        }
+        .badge {
+            padding: 6px 14px;
+            border-radius: 20px;
+        }
+        .badge.pass { background: #dcfce7; color: #15803d; border: 1px solid #86efac; }
+        .badge.fail { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }
+        .test-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 16px;
+        }
+        .test-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 0.88rem;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+        }
+        .test-item.pass { border-left: 4px solid #22c55e; }
+        .test-item.fail { border-left: 4px solid #ef4444; background: #fff5f5; }
+        .test-name { font-weight: 600; color: #334155; }
+        .test-status { font-weight: 700; font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; }
+        .btn-run {
+            padding: 10px 20px;
+            background: #4338ca;
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .btn-run:hover { background: #3730a3; }
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            color: #4338ca;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        .back-link:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="runner-container">
+        <div class="header">
+            <div>
+                <h1>CompArch Suite Unit Tests</h1>
+                <p style="font-size: 0.85rem; color: #64748b; margin-top: 4px;">Automated 100% Accuracy Verification</p>
+            </div>
+            <button class="btn-run" onclick="executeTests()">Re-Run Tests</button>
+        </div>
+
+        <div class="score-box" id="summaryBox">
+            <span class="badge pass" id="passCount">Passed: 0</span>
+            <span class="badge fail" id="failCount">Failed: 0</span>
+        </div>
+
+        <div class="test-list" id="testList"></div>
+
+        <a href="../index.html" class="back-link">&larr; Back to CompArch Suite App</a>
+    </div>
+
+    <script src="test_suite.js"></script>
+    <script>
+        function executeTests() {
+            const results = runAllTests();
+            const listEl = document.getElementById('testList');
+            let passed = 0;
+            let failed = 0;
+
+            listEl.innerHTML = '';
+            results.forEach(r => {
+                if (r.passed) passed++;
+                else failed++;
+
+                const item = document.createElement('div');
+                item.className = `test-item ${r.passed ? 'pass' : 'fail'}`;
+                item.innerHTML = `
+                    <span class="test-name">${r.testName}</span>
+                    <span class="test-status" style="color: ${r.passed ? '#15803d' : '#b91c1c'};">
+                        ${r.passed ? '✓ PASS' : `✗ FAIL (Expected: ${r.expected}, Got: ${r.actual})`}
+                    </span>
+                `;
+                listEl.appendChild(item);
+            });
+
+            document.getElementById('passCount').textContent = `Passed: ${passed}`;
+            document.getElementById('failCount').textContent = `Failed: ${failed}`;
+        }
+
+        window.onload = executeTests;
+    </script>
+</body>
+</html>
