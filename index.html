@@ -4,13 +4,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cal Numberic & Boolean Algebra</title>
+    <meta name="theme-color" content="#0284c7">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="CompArch">
+    <link rel="apple-touch-icon" href="public/icons/calculator.png">
+
+    <link rel="manifest" href="manifest.json">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400..700&family=Plus+Jakarta+Sans:ital,wght@0,400..800;1,400..800&display=swap" rel="stylesheet">
 
     <!-- icon -->
     <link rel="icon" type="image/x-icon" href="public/icons/calculator.png">
@@ -24,56 +28,196 @@
 
     <div class="app_container">
         <header class="app_header">
-            <img src="public/icons/calculator.png" alt="calculator" class="logo_icon">
-            <div class="header_text">
-                <h1>Base Converter</h1>
-                <p class="subtitle">Computer Architecture Subject</p>
+            <div class="header_branding">
+                <img src="public/icons/calculator.png" alt="calculator" class="logo_icon">
+                <div class="header_text">
+                    <h1>CompArch Suite</h1>
+                    <p class="subtitle">Computer Architecture Suite & Visualizer</p>
+                </div>
             </div>
+
+            <!-- Top Navigation Bar -->
+            <nav class="app_nav">
+                <button type="button" class="nav_link active" data-view="number-converter">
+                    <svg class="nav_svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 10h.01M12 10h.01M16 10h.01M8 14h.01M12 14h.01M16 14h.01"/></svg>
+                    <span class="nav_text">Base Converter</span>
+                </button>
+                <button type="button" class="nav_link" data-view="boolean-algebra">
+                    <svg class="nav_svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                    <span class="nav_text">Boolean Algebra</span>
+                </button>
+                <button type="button" class="nav_link" data-view="complements">
+                    <svg class="nav_svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+                    <span class="nav_text">Complements</span>
+                </button>
+            </nav>
         </header>
 
+        <!-- Quick Access Dashboard Cards (Matching Reference UI) -->
+        <div class="quick_access_section">
+            <h3 class="quick_access_title">Quick Access</h3>
+            <div class="quick_access_grid">
+                <div class="quick_card card_orange nav_link active" data-view="number-converter">
+                    <div class="quick_card_top">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 10h.01M12 10h.01M16 10h.01M8 14h.01M12 14h.01M16 14h.01"/></svg>
+                        <span class="quick_dots">• • •</span>
+                    </div>
+                    <div class="quick_card_bottom">
+                        <div class="quick_number">01</div>
+                        <div class="quick_label">Base Converter</div>
+                    </div>
+                </div>
+
+                <div class="quick_card card_purple nav_link" data-view="boolean-algebra">
+                    <div class="quick_card_top">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                        <span class="quick_dots">• • •</span>
+                    </div>
+                    <div class="quick_card_bottom">
+                        <div class="quick_number">02</div>
+                        <div class="quick_label">Boolean Algebra</div>
+                    </div>
+                </div>
+
+                <div class="quick_card card_dark nav_link" data-view="complements">
+                    <div class="quick_card_top">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+                        <span class="quick_dots">• • •</span>
+                    </div>
+                    <div class="quick_card_bottom">
+                        <div class="quick_number">03</div>
+                        <div class="quick_label">Signed Complements</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <main class="wrapper_numeric">
-            <div class="converter_card">
-                <div class="input_number_wrapper">
-                    <label for="inputNumberic" class="field_label">Enter Number</label>
+            <!-- Module 1: Base Converter -->
+            <section id="view-number-converter" class="module_view active">
+                <div class="converter_card">
+                    <div class="input_number_wrapper">
+                        <label for="inputNumberic" class="field_label">Enter Number</label>
+                        <div class="input_inner">
+                            <input type="text" id="inputNumberic" placeholder="Type a number (e.g. 1010, 1F, 255)" inputmode="numeric" autofocus>
+                        </div>
+                    </div>
+
+                    <div class="wrapper_selector">
+                        <div class="select_group">
+                            <label for="fromBaseNumericSelect">From Base</label>
+                            <select class="form-control" id="fromBaseNumericSelect">
+                                <option value="2">Binary (ฐาน 2)</option>
+                                <option value="8">Octal (ฐาน 8)</option>
+                                <option value="10">Decimal (ฐาน 10)</option>
+                                <option value="16" selected>Hexadecimal (ฐาน 16)</option>
+                            </select>
+                        </div>
+
+                        <div class="selector_arrow" aria-hidden="true">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                        </div>
+
+                        <div class="select_group">
+                            <label for="toBaseNumericSelect">To Base</label>
+                            <select class="form-control" id="toBaseNumericSelect">
+                                <option value="2">Binary (ฐาน 2)</option>
+                                <option value="8">Octal (ฐาน 8)</option>
+                                <option value="10" selected>Decimal (ฐาน 10)</option>
+                                <option value="16">Hexadecimal (ฐาน 16)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div id="outputNumberic" class="output-box" style="display: none;"></div>
+                </div>
+
+                <div class="steps-box">
+                    <div class="tab-container">
+                        <button type="button" class="tab-btn active" id="tabStandardBtn">วิธีมาตรฐาน (หารสั้น/กระจายหลัก)</button>
+                        <button type="button" class="tab-btn" id="tabGroupingBtn">วิธีจัดกลุ่มบิต / ตารางเทียบ</button>
+                    </div>
+                    <div id="shortDivisionSteps"></div>
+                </div>
+            </section>
+
+            <!-- Module 2: Boolean Algebra & Logic Gates Visualizer -->
+            <section id="view-boolean-algebra" class="module_view">
+                <div class="converter_card">
+                    <div class="field_label">Boolean Expression & Logic Simulator</div>
                     <div class="input_inner">
-                        <input type="text" id="inputNumberic" placeholder="Type a number (e.g. 1010, 1F, 255)" inputmode="numeric" autofocus>
+                        <input type="text" id="booleanExprInput" placeholder="Enter logic expression (e.g. A AND B, A OR (NOT B), A XOR B)" value="A AND B">
+                    </div>
+
+                    <div class="boolean_quick_btns">
+                        <button type="button" class="op_btn" data-op="AND">AND</button>
+                        <button type="button" class="op_btn" data-op="OR">OR</button>
+                        <button type="button" class="op_btn" data-op="NOT">NOT</button>
+                        <button type="button" class="op_btn" data-op="NAND">NAND</button>
+                        <button type="button" class="op_btn" data-op="NOR">NOR</button>
+                        <button type="button" class="op_btn" data-op="XOR">XOR</button>
+                    </div>
+
+                    <div class="var_switches_box">
+                        <span class="var_switches_title">Live Variable Inputs:</span>
+                        <div class="var_switches_list">
+                            <button type="button" class="var_toggle" id="btnToggleA" data-var="A">A: <strong class="var_val">0</strong></button>
+                            <button type="button" class="var_toggle" id="btnToggleB" data-var="B">B: <strong class="var_val">0</strong></button>
+                            <button type="button" class="var_toggle" id="btnToggleC" data-var="C">C: <strong class="var_val">0</strong></button>
+                        </div>
                     </div>
                 </div>
 
-                <div class="wrapper_selector">
-                    <div class="select_group">
-                        <label for="fromBaseNumericSelect">From Base</label>
-                        <select class="form-control" id="fromBaseNumericSelect">
-                            <option value="2">Binary (ฐาน 2)</option>
-                            <option value="8">Octal (ฐาน 8)</option>
-                            <option value="10">Decimal (ฐาน 10)</option>
-                            <option value="16" selected>Hexadecimal (ฐาน 16)</option>
-                        </select>
-                    </div>
+                <div class="steps-box">
+                    <h4 class="section_title">
+                        <svg class="title_svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>
+                        Truth Table & Minterm / Maxterm Canonical Expressions
+                    </h4>
+                    <div id="truthTableContainer"></div>
 
-                    <div class="selector_arrow" aria-hidden="true">&rarr;</div>
+                    <hr style="border: 0; border-top: 1.5px dashed #cbd5e1; margin: 20px 0;">
 
-                    <div class="select_group">
-                        <label for="toBaseNumericSelect">To Base</label>
-                        <select class="form-control" id="toBaseNumericSelect">
-                            <option value="2">Binary (ฐาน 2)</option>
-                            <option value="8">Octal (ฐาน 8)</option>
-                            <option value="10" selected>Decimal (ฐาน 10)</option>
-                            <option value="16">Hexadecimal (ฐาน 16)</option>
-                        </select>
+                    <h4 class="section_title">
+                        <svg class="title_svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+                        Step-by-Step Boolean Simplification (การลดรูปสมการแบบทีละขั้นตอนระบุกฎ)
+                    </h4>
+                    <div id="simplificationStepsContainer"></div>
+
+                    <hr style="border: 0; border-top: 1.5px dashed #cbd5e1; margin: 20px 0;">
+
+                    <h4 class="section_title">
+                        <svg class="title_svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18M3 9h18M3 15h18"/></svg>
+                        Karnaugh Map (K-map Gray Code Simplification)
+                    </h4>
+                    <div id="kmapContainer"></div>
+
+                    <hr style="border: 0; border-top: 1.5px dashed #cbd5e1; margin: 20px 0;">
+
+                    <h4 class="section_title">
+                        <svg class="title_svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="7" width="10" height="10" rx="2"/><path d="M12 2v5M12 17v5M2 12h5M17 12h5"/></svg>
+                        Logic Circuit Visualizer (วงจรลอจิกเกต)
+                    </h4>
+                    <div id="logicGateDiagramContainer"></div>
+                </div>
+            </section>
+
+            <!-- Module 3: 1's & 2's Complement -->
+            <section id="view-complements" class="module_view">
+                <div class="converter_card">
+                    <div class="field_label">Signed Binary & Complement Calculator</div>
+                    <div class="input_inner">
+                        <input type="text" id="complementInput" placeholder="Enter binary number (e.g. 10110)" value="10110">
                     </div>
                 </div>
 
-                <div id="outputNumberic" class="output-box" style="display: none;"></div>
-            </div>
-
-            <div class="steps-box">
-                <div class="tab-container">
-                    <button type="button" class="tab-btn active" id="tabStandardBtn">วิธีมาตรฐาน (หารสั้น/กระจายหลัก)</button>
-                    <button type="button" class="tab-btn" id="tabGroupingBtn">วิธีจัดกลุ่มบิต / ตารางเทียบ</button>
+                <div class="steps-box">
+                    <h4 class="section_title">
+                        <svg class="title_svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg>
+                        1's & 2's Complement Results
+                    </h4>
+                    <div id="complementResultContainer"></div>
                 </div>
-                <div id="shortDivisionSteps"></div>
-            </div>
+            </section>
         </main>
     </div>
 
