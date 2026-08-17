@@ -1,4 +1,4 @@
-const CACHE_NAME = 'comparch-v2';
+const CACHE_NAME = 'comparch-v4';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',

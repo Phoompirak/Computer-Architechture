@@ -43,24 +43,31 @@ function fromDecimal(value, base) {
 // Boolean Algebra Core
 function normalizeBooleanExpression(rawExpr) {
   if (!rawExpr) return '';
-  let expr = rawExpr.trim().replace(/^[A-Z]\s*=\s*/i, '');
-  expr = expr.replace(/([A-Z]|\))\s*['’~]/g, '(!$1)');
-  
-  // Transform compound operators NAND, NOR, XNOR first
+  let expr = rawExpr.trim();
+
+  // 1. Remove output variable prefix (e.g., Y = , F = , F(A,B) = )
+  expr = expr.replace(/^[A-Z](?:\s*\([^)]*\))?\s*=\s*/i, '');
+
+  // 2. Normalize NOT notation: C' -> (!C), C’ -> (!C), ~C -> (!C), C′ -> (!C)
+  expr = expr.replace(/([A-Z]|\))\s*['’‘′\`´~]/g, '(!$1)');
+
+  // 3. Transform compound operators NAND, NOR, XNOR first
   for (let p = 0; p < 4; p++) {
     expr = expr.replace(/([A-Za-z0-9_!]+|\([^)]+\))\s*\bNAND\b\s*([A-Za-z0-9_!]+|\([^)]+\))/gi, '!($1 && $2)');
     expr = expr.replace(/([A-Za-z0-9_!]+|\([^)]+\))\s*\bNOR\b\s*([A-Za-z0-9_!]+|\([^)]+\))/gi, '!($1 || $2)');
     expr = expr.replace(/([A-Za-z0-9_!]+|\([^)]+\))\s*\bXNOR\b\s*([A-Za-z0-9_!]+|\([^)]+\))/gi, '!($1 ^ $2)');
   }
 
+  // 4. Standardize logic operator keywords
   expr = expr.replace(/\bXOR\b/gi, ' ^ ');
   expr = expr.replace(/\bAND\b/gi, ' && ');
   expr = expr.replace(/\bOR\b/gi, ' || ');
   expr = expr.replace(/\bNOT\b/gi, ' ! ');
+  expr = expr.replace(/~/g, ' ! ');
   expr = expr.replace(/·|\*/g, ' && ');
   expr = expr.replace(/\+/g, ' || ');
 
-  // Insert implicit AND between single uppercase variables / parentheses
+  // 5. Insert implicit AND between single uppercase variables / parentheses:
   for (let pass = 0; pass < 5; pass++) {
     expr = expr.replace(/([A-Z]|\))\s*([A-Z]|\(|\!)/g, '$1 && $2');
   }
@@ -70,6 +77,8 @@ function normalizeBooleanExpression(rawExpr) {
 
 function evaluateBooleanExpr(rawExpr, scope) {
   let jsExpr = normalizeBooleanExpression(rawExpr);
+
+  // Replace variable names with scope boolean values (1 / 0)
   Object.keys(scope).forEach(v => {
     const reg = new RegExp(`\\b${v}\\b`, 'g');
     jsExpr = jsExpr.replace(reg, scope[v] ? '1' : '0');
@@ -87,7 +96,7 @@ function validateBooleanExpression(rawExpr) {
   if (!rawExpr || !rawExpr.trim()) {
     return { isValid: false, error: 'Empty expression' };
   }
-  const clean = rawExpr.replace(/^[A-Z]\s*=\s*/i, '').trim();
+  const clean = rawExpr.replace(/^[A-Z](?:\s*\([^)]*\))?\s*=\s*/i, '').trim();
   if (!clean) return { isValid: false, error: 'Empty expression' };
 
   let parenDepth = 0;
@@ -265,6 +274,11 @@ function runAllTests() {
   assert('Eval Prime notation A\'', evaluateBooleanExpr("A'", { A: 0 }), 1);
   assert('Eval NAND (1, 1)', evaluateBooleanExpr('A NAND B', { A: 1, B: 1 }), 0);
   assert('Eval NOR (0, 0)', evaluateBooleanExpr('A NOR B', { A: 0, B: 0 }), 1);
+  assert('Eval Curly quote A’', evaluateBooleanExpr("A’", { A: 0 }), 1);
+  assert('Eval Prime quote A′', evaluateBooleanExpr("A′", { A: 0 }), 1);
+  assert('Eval Backtick A`', evaluateBooleanExpr("A`", { A: 0 }), 1);
+  assert('Eval Prefix F(A,B)=A+B', evaluateBooleanExpr("F(A,B) = A+B", { A: 1, B: 0 }), 1);
+  assert('Eval User Input with space quote AB(C+C \' )D', evaluateBooleanExpr("AB(C+C ' )D", { A: 1, B: 1, C: 0, D: 1 }), 1);
 
   // --- MODULE 3 TESTS: SIGNED COMPLEMENTS ---
   const comp1 = calculateComplements('10110');

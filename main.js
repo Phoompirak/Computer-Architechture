@@ -14,7 +14,7 @@ const translations = {
     quick_access_title: 'เมนูทางลัด (Quick Access)',
     card_1: 'แปลงเลขฐาน',
     card_2: 'พีชคณิตบูลีน',
-    card_3: 'คอมพลีเมนต์มีเครื่องหมาย',
+    card_3: 'กฎบูลีนลดรูป',
     card_4: 'คณิตศาสตร์เลขฐาน',
     enter_number: 'กรอกตัวเลข',
     input_numberic_ph: 'กรอกตัวเลข (เช่น 1010, 1F, 255)',
@@ -29,9 +29,11 @@ const translations = {
     simplification_title: 'ขั้นตอนการลดรูปสมการพร้อมระบุกฎพีชคณิตบูลีน',
     kmap_title: 'แผนผังคาร์โนห์ (ลดรูป K-Map ด้วยรหัสเกรย์)',
     circuit_title: 'ตัวจำลองแผนผังวงจรลอจิกเกต (Logic Gates)',
-    complement_label: 'คำนวณคอมพลีเมนต์และเลขฐานสองมีเครื่องหมาย',
-    complement_ph: 'กรอกเลขฐานสอง (เช่น 10110)',
-    complement_title: 'ผลลัพธ์ 1\'s และ 2\'s Complement',
+    tab_laws: 'กฎสำคัญ (Important Laws)',
+    tab_step_example: 'ลดรูป Step-by-Step (Example)',
+    law_basic: 'กฎพื้นฐาน',
+    law_formatting: 'กฎการจัดรูปสมการ',
+    law_simplification: 'กฎลดรูปที่ใช้บ่อย',
     arithmetic_label: 'คณิตศาสตร์เลขฐาน (+, -, ×, ÷)',
     select_base: 'เลือกฐานเลข',
     operand1_ph: 'ตัวตั้ง (Operand 1)',
@@ -43,7 +45,7 @@ const translations = {
     quick_access_title: 'Quick Access',
     card_1: 'Base Converter',
     card_2: 'Boolean Algebra',
-    card_3: 'Signed Complements',
+    card_3: 'Boolean Laws',
     card_4: 'Base Arithmetic',
     enter_number: 'Enter Number',
     input_numberic_ph: 'Type a number (e.g. 1010, 1F, 255)',
@@ -58,9 +60,11 @@ const translations = {
     simplification_title: 'Step-by-Step Simplification with Laws',
     kmap_title: 'Karnaugh Map (K-map Gray Code Simplification)',
     circuit_title: 'Logic Circuit Visualizer',
-    complement_label: 'Signed Binary & Complement Calculator',
-    complement_ph: 'Enter binary number (e.g. 10110)',
-    complement_title: '1\'s & 2\'s Complement Results',
+    tab_laws: 'Important Laws',
+    tab_step_example: 'Step-by-Step Example',
+    law_basic: 'Basic Laws',
+    law_formatting: 'Formatting Laws',
+    law_simplification: 'Simplification Laws',
     arithmetic_label: 'Base Arithmetic (+, -, ×, ÷)',
     select_base: 'Select Base',
     operand1_ph: 'Operand 1',
@@ -986,7 +990,7 @@ function validateBooleanExpression(rawExpr) {
   if (!rawExpr || !rawExpr.trim()) {
     return { isValid: false, error: 'กรุณากรอกสมการบูลีน (Boolean expression is empty)' };
   }
-  const clean = rawExpr.replace(/^[A-Z]\s*=\s*/i, '').trim();
+  const clean = rawExpr.replace(/^[A-Z](?:\s*\([^)]*\))?\s*=\s*/i, '').trim();
   if (!clean) {
     return { isValid: false, error: 'กรุณากรอกสมการบูลีนหลังเครื่องหมาย = (Expression is empty)' };
   }
@@ -1037,11 +1041,43 @@ function normalizeBooleanExpression(rawExpr) {
   if (!rawExpr) return '';
   let expr = rawExpr.trim();
 
-  // 1. Remove output variable prefix (e.g., Y = , F = , Z =)
-  expr = expr.replace(/^[A-Z]\s*=\s*/i, '');
+  // 1. Remove output variable prefix (e.g., Y = , F = , F(A,B) = )
+  expr = expr.replace(/^[A-Z](?:\s*\([^)]*\))?\s*=\s*/i, '');
 
-  // 2. Normalize NOT notation: C' -> (!C), C’ -> (!C), ~C -> (!C)
-  expr = expr.replace(/([A-Z]|\))\s*['’~]/g, '(!$1)');
+  // 2. Normalize NOT notation: C' -> (!C), C’ -> (!C), ~C -> (!C), C′ -> (!C)
+  let newExpr = '';
+  for (let i = 0; i < expr.length; i++) {
+    if (/['’‘′\`´~]/.test(expr[i])) {
+      let j = newExpr.length - 1;
+      while (j >= 0 && /\s/.test(newExpr[j])) j--;
+      if (j >= 0) {
+        if (/[A-Z]/i.test(newExpr[j])) {
+          newExpr = newExpr.substring(0, j) + '(!' + newExpr[j] + ')' + newExpr.substring(j + 1);
+        } else if (newExpr[j] === ')') {
+          let parenCount = 1;
+          let k = j - 1;
+          while (k >= 0 && parenCount > 0) {
+            if (newExpr[k] === ')') parenCount++;
+            else if (newExpr[k] === '(') parenCount--;
+            k--;
+          }
+          if (parenCount === 0) {
+            k++;
+            newExpr = newExpr.substring(0, k) + '(!' + newExpr.substring(k, j + 1) + ')' + newExpr.substring(j + 1);
+          } else {
+            newExpr += expr[i];
+          }
+        } else {
+          newExpr += expr[i];
+        }
+      } else {
+        newExpr += expr[i];
+      }
+    } else {
+      newExpr += expr[i];
+    }
+  }
+  expr = newExpr;
 
   // 3. Transform compound operators NAND, NOR, XNOR first
   for (let p = 0; p < 4; p++) {
@@ -1055,6 +1091,7 @@ function normalizeBooleanExpression(rawExpr) {
   expr = expr.replace(/\bAND\b/gi, ' && ');
   expr = expr.replace(/\bOR\b/gi, ' || ');
   expr = expr.replace(/\bNOT\b/gi, ' ! ');
+  expr = expr.replace(/~/g, ' ! ');
   expr = expr.replace(/·|\*/g, ' && ');
   expr = expr.replace(/\+/g, ' || ');
 
@@ -1105,14 +1142,15 @@ function renderBooleanAlgebra() {
     return;
   }
 
-  // Clean expression for variable detection (strip Y= prefix)
-  const cleanForVars = expr.replace(/^[A-Z]\s*=\s*/i, '');
+  // Clean expression for variable detection (strip Y= prefix and operators)
+  const cleanForVars = expr.replace(/^[A-Z]\s*=\s*/i, '')
+                           .replace(/\b(AND|OR|NAND|NOR|XOR|XNOR|NOT)\b/gi, '');
 
   // Detect variables used in expression (A, B, C, D, E, F...)
   const varsFound = [];
   const candidateVars = ['A', 'B', 'C', 'D', 'E', 'F'];
   candidateVars.forEach(v => {
-    if (new RegExp(`\\b${v}\\b`, 'i').test(cleanForVars)) {
+    if (cleanForVars.toUpperCase().includes(v)) {
       varsFound.push(v);
     }
   });
@@ -1409,25 +1447,53 @@ function renderBooleanAlgebra() {
   }
 }
 
+function termToString(value, mask, varsFound) {
+  let str = '';
+  for (let k = 0; k < varsFound.length; k++) {
+    const bitPos = varsFound.length - 1 - k;
+    if ((mask & (1 << bitPos)) !== 0) {
+      const val = (value >> bitPos) & 1;
+      str += varsFound[k] + (val === 1 ? '' : "'");
+    }
+  }
+  return str || '1';
+}
+
 function renderStepByStepSimplification(mintermIndices, varsFound, mintermExprs) {
   if (!mintermIndices || mintermIndices.length === 0) {
-    return `
-      <div class="gate_card" style="background: #fef2f2; border-color: #fca5a5;">
-        <span class="gate_label" style="color: #dc2626;">สรุปผลลัพธ์:</span>
-        <strong style="font-family: monospace; font-size: 1.1rem; color: #dc2626;">Y = 0</strong>
+    const finalHtml = `
+      <div class="gate_card" style="background: #fef2f2; border-color: #fca5a5; margin-bottom: 14px;">
+        <div>
+          <span class="gate_label" style="color: #dc2626;">🏆 สรุปผลลัพธ์รูปที่ง่ายที่สุด (Final Answer):</span><br>
+          <span style="font-size: 0.85rem; color: #991b1b;">ลดรูปด้วยกฎพีชคณิตบูลีน ประหยัดเกตและประมวลผลได้เร็วที่สุด</span>
+        </div>
+        <strong style="font-family: monospace; font-size: 1.25rem; color: #b91c1c;">Y = 0</strong>
       </div>
     `;
+    const finalAnswerContainer = document.getElementById('finalAnswerContainer');
+    if (finalAnswerContainer) {
+      finalAnswerContainer.innerHTML = finalHtml;
+    }
+    return `<div class="gate_card" style="background: #fef2f2; border-color: #fca5a5;"><strong style="color: #dc2626;">Y = 0</strong></div>`;
   }
 
   const numVars = varsFound.length;
   const totalMinterms = Math.pow(2, numVars);
   if (mintermIndices.length === totalMinterms) {
-    return `
-      <div class="gate_card" style="background: #f0fdf4; border-color: #86efac;">
-        <span class="gate_label" style="color: #16a34a;">สรุปผลลัพธ์:</span>
-        <strong style="font-family: monospace; font-size: 1.1rem; color: #16a34a;">Y = 1</strong>
+    const finalHtml = `
+      <div class="gate_card" style="background: #f0fdf4; border-color: #86efac; margin-bottom: 14px;">
+        <div>
+          <span class="gate_label" style="color: #16a34a;">🏆 สรุปผลลัพธ์รูปที่ง่ายที่สุด (Final Answer):</span><br>
+          <span style="font-size: 0.85rem; color: #166534;">ลดรูปด้วยกฎพีชคณิตบูลีน ประหยัดเกตและประมวลผลได้เร็วที่สุด</span>
+        </div>
+        <strong style="font-family: monospace; font-size: 1.25rem; color: #15803d;">Y = 1</strong>
       </div>
     `;
+    const finalAnswerContainer = document.getElementById('finalAnswerContainer');
+    if (finalAnswerContainer) {
+      finalAnswerContainer.innerHTML = finalHtml;
+    }
+    return `<div class="gate_card" style="background: #f0fdf4; border-color: #86efac;"><strong style="color: #15803d;">Y = 1</strong></div>`;
   }
 
   const steps = [];
@@ -1441,66 +1507,93 @@ function renderStepByStepSimplification(mintermIndices, varsFound, mintermExprs)
     result: `Y = ${initExpr}`
   });
 
-  // Step 2: Combining adjacent terms (Distributive Law & Complement Law)
-  if (mintermExprs.length > 1) {
-    const grouped = [];
-    for (let i = 0; i < mintermIndices.length; i++) {
-      for (let j = i + 1; j < mintermIndices.length; j++) {
-        const m1 = mintermIndices[i];
-        const m2 = mintermIndices[j];
-        const diff = m1 ^ m2;
-        if ((diff & (diff - 1)) === 0) {
-          const e1 = mintermExprs[i];
-          const e2 = mintermExprs[j];
-          let common = '';
-          for (let k = 0; k < e1.length; k++) {
-            if (e1[k] === e2[k]) {
-              common += e1[k];
+  // Step-by-Step Quine-McCluskey Reduction
+  let currentTerms = mintermIndices.map(idx => ({
+    value: idx,
+    mask: (1 << numVars) - 1,
+    merged: false,
+    originTerms: [idx]
+  }));
+
+  const allPrimeImplicants = [];
+  let passNum = 2;
+  
+  while (true) {
+    const nextTerms = [];
+    const mergesInThisPass = [];
+    
+    for (let i = 0; i < currentTerms.length; i++) {
+      for (let j = i + 1; j < currentTerms.length; j++) {
+        const t1 = currentTerms[i];
+        const t2 = currentTerms[j];
+        
+        if (t1.mask === t2.mask) {
+          const diff = t1.value ^ t2.value;
+          if ((diff & (diff - 1)) === 0 && (diff & t1.mask) !== 0) {
+            t1.merged = true;
+            t2.merged = true;
+            
+            const newValue = t1.value & ~diff;
+            const newMask = t1.mask ^ diff;
+            
+            const exists = nextTerms.some(t => t.value === newValue && t.mask === newMask);
+            if (!exists) {
+              nextTerms.push({
+                value: newValue,
+                mask: newMask,
+                merged: false,
+                originTerms: [...t1.originTerms, ...t2.originTerms].sort((a, b) => a - b)
+              });
             }
-          }
-          if (common && !grouped.includes(common)) {
-            grouped.push(common);
+            
+            const t1Str = termToString(t1.value, t1.mask, varsFound);
+            const t2Str = termToString(t2.value, t2.mask, varsFound);
+            const mergedStr = termToString(newValue, newMask, varsFound);
+            mergesInThisPass.push(`${t1Str} + ${t2Str} &rarr; ${mergedStr}`);
           }
         }
       }
     }
-
-    if (grouped.length > 0) {
+    
+    currentTerms.forEach(t => {
+      if (!t.merged) {
+        const exists = allPrimeImplicants.some(p => p.value === t.value && p.mask === t.mask);
+        if (!exists) {
+          allPrimeImplicants.push(t);
+        }
+      }
+    });
+    
+    if (nextTerms.length === 0) {
+      break;
+    }
+    
+    if (mergesInThisPass.length > 0) {
+      const uniqueMerges = Array.from(new Set(mergesInThisPass));
+      const stepResultTerms = [
+        ...nextTerms.map(t => termToString(t.value, t.mask, varsFound)),
+        ...allPrimeImplicants.filter(p => !p.merged).map(p => termToString(p.value, p.mask, varsFound))
+      ];
+      const uniqueStepResult = Array.from(new Set(stepResultTerms));
+      
       steps.push({
-        num: 2,
-        target: `ดึงตัวร่วมพจน์คู่ประชิด (${mintermExprs.slice(0, 2).join(' + ')})`,
-        law: `Distributive Law: X(Y + Y') = XY + XY'`,
-        result: `Y = ${grouped.join(' + ')}`
-      });
-
-      steps.push({
-        num: 3,
-        target: `การตัดพจน์ตรงข้าม`,
-        law: `Complement Law: Y + Y' = 1 & Identity Law: X · 1 = X`,
-        result: `Y = ${grouped.join(' + ')}`
+        num: passNum++,
+        target: `ดึงตัวร่วมคู่ประชิด:<br>${uniqueMerges.join('<br>')}`,
+        law: `Distributive Law & Complement Law: XY' + XY = X(Y' + Y) = X`,
+        result: `Y = ${uniqueStepResult.join(' + ')}`
       });
     }
+    
+    currentTerms = nextTerms;
   }
 
-  // Generate Step HTML Cards
-  let html = `<div class="steps_grid">`;
-  steps.forEach(s => {
-    html += `
-      <div class="step_card">
-        <div class="step_card_header">Step ${s.num}</div>
-        <div class="step_card_row"><strong>พจน์ที่จัดการ:</strong> ${escapeHTML(s.target)}</div>
-        <div class="step_card_row"><strong>กฎที่ใช้:</strong> <span style="color: var(--primary); font-weight: 700;">${escapeHTML(s.law)}</span></div>
-        <div class="step_card_row" style="background: #f8fafc; padding: 6px 8px; border-radius: 6px; margin-top: 6px;">
-          <strong>ผลลัพธ์ย่อย:</strong> <code style="font-family: monospace; font-size: 0.95rem; color: #0284c7; font-weight: bold;">${escapeHTML(s.result)}</code>
-        </div>
-      </div>
-    `;
-  });
-  html += `</div>`;
+  // Deduplicate and finalize Prime Implicants
+  const finalTerms = allPrimeImplicants.map(p => termToString(p.value, p.mask, varsFound));
+  const uniqueFinalTerms = Array.from(new Set(finalTerms));
+  const finalSimplified = uniqueFinalTerms.join(' + ');
 
-  const finalSimplified = steps[steps.length - 1].result.replace('Y = ', '');
-  html += `
-    <div class="gate_card" style="background: #f0fdf4; border-color: #86efac; margin-top: 14px;">
+  const finalHtml = `
+    <div class="gate_card" style="background: #f0fdf4; border-color: #86efac; margin-bottom: 14px;">
       <div>
         <span class="gate_label" style="color: #16a34a;">🏆 สรุปผลลัพธ์รูปที่ง่ายที่สุด (Final Answer):</span><br>
         <span style="font-size: 0.85rem; color: #166534;">ลดรูปด้วยกฎพีชคณิตบูลีน ประหยัดเกตและประมวลผลได้เร็วที่สุด</span>
@@ -1508,135 +1601,55 @@ function renderStepByStepSimplification(mintermIndices, varsFound, mintermExprs)
       <strong style="font-family: monospace; font-size: 1.25rem; color: #15803d;">Y = ${escapeHTML(finalSimplified)}</strong>
     </div>
   `;
+  
+  const finalAnswerContainer = document.getElementById('finalAnswerContainer');
+  if (finalAnswerContainer) {
+    finalAnswerContainer.innerHTML = finalHtml;
+  }
+
+  // Steps Grid for Accordion Body
+  let html = `<div class="steps_grid">`;
+
+  steps.forEach(s => {
+    html += `
+          <div class="step_card">
+            <div class="step_card_header">Step ${s.num}</div>
+            <div class="step_card_row"><strong>พจน์ที่จัดการ:</strong><br>${s.target}</div>
+            <div class="step_card_row"><strong>กฎที่ใช้:</strong> <span style="color: var(--primary); font-weight: 700;">${escapeHTML(s.law)}</span></div>
+            <div class="step_card_row" style="background: #f8fafc; padding: 6px 8px; border-radius: 6px; margin-top: 6px;">
+              <strong>ผลลัพธ์ย่อย:</strong> <code style="font-family: monospace; font-size: 0.95rem; color: #0284c7; font-weight: bold;">${escapeHTML(s.result)}</code>
+            </div>
+          </div>
+    `;
+  });
+
+  html += `</div>`;
 
   return html;
 }
 
 /* ==========================================================================
-   MODULE 3: 1's & 2's COMPLEMENT CALCULATOR ENGINE
+   MODULE 3: BOOLEAN LAWS & STEP-BY-STEP UI
    ========================================================================== */
-const complementInput = document.querySelector('#complementInput');
-const complementResultContainer = document.querySelector('#complementResultContainer');
+const tabLawsBtn = document.getElementById('tabLawsBtn');
+const tabStepExampleBtn = document.getElementById('tabStepExampleBtn');
+const lawsContent = document.getElementById('lawsContent');
+const stepExampleContent = document.getElementById('stepExampleContent');
 
-if (complementInput) {
-  complementInput.addEventListener('input', renderComplementCalculator);
-}
+if (tabLawsBtn && tabStepExampleBtn) {
+  tabLawsBtn.addEventListener('click', () => {
+    tabLawsBtn.classList.add('active');
+    tabStepExampleBtn.classList.remove('active');
+    lawsContent.style.display = 'block';
+    stepExampleContent.style.display = 'none';
+  });
 
-function renderComplementCalculator() {
-  if (!complementInput || !complementResultContainer) return;
-
-  let raw = complementInput.value.trim();
-  const hasInvalidChars = /[^01]/.test(raw);
-  raw = raw.replace(/[^01]/g, '');
-
-  if (!raw) {
-    complementResultContainer.innerHTML = '<div class="warning_banner error_banner">⚠️ กรุณากรอกเลขฐานสอง (0 และ 1 เท่านั้น)</div>';
-    return;
-  }
-
-  const bitLength = raw.length;
-
-  // 1's Complement (Flip bits)
-  let onesComp = '';
-  for (let i = 0; i < raw.length; i++) {
-    onesComp += raw[i] === '0' ? '1' : '0';
-  }
-
-  // 2's Complement (1's Complement + 1)
-  let twosCompArr = onesComp.split('');
-  let carry = 1;
-
-  for (let i = twosCompArr.length - 1; i >= 0; i--) {
-    if (twosCompArr[i] === '1' && carry === 1) {
-      twosCompArr[i] = '0';
-    } else if (twosCompArr[i] === '0' && carry === 1) {
-      twosCompArr[i] = '1';
-      carry = 0;
-    }
-  }
-  const twosComp = twosCompArr.join('');
-
-  // MSB Sign Bit analysis
-  const msb = raw[0];
-  const isNegative = msb === '1';
-  let signedDec = 0n;
-
-  if (isNegative) {
-    if (raw.length === 1) {
-      signedDec = -1n;
-    } else {
-      let absVal = 0n;
-      for (let i = 0; i < twosComp.length; i++) {
-        absVal = (absVal << 1n) | (twosComp[i] === '1' ? 1n : 0n);
-      }
-      signedDec = -absVal;
-    }
-  } else {
-    for (let i = 0; i < raw.length; i++) {
-      signedDec = (signedDec << 1n) | (raw[i] === '1' ? 1n : 0n);
-    }
-  }
-
-  // Unsigned Decimal value
-  let unsignedDec = 0n;
-  for (let i = 0; i < raw.length; i++) {
-    unsignedDec = (unsignedDec << 1n) | (raw[i] === '1' ? 1n : 0n);
-  }
-
-  // Representable Range for N-bit signed number: [-2^(N-1), 2^(N-1) - 1]
-  const minSigned = -(1n << BigInt(bitLength - 1));
-  const maxSigned = (1n << BigInt(bitLength - 1)) - 1n;
-  const maxUnsigned = (1n << BigInt(bitLength)) - 1n;
-
-  let warningHtml = '';
-  if (hasInvalidChars) {
-    warningHtml = `<div class="warning_banner">⚠️ ระบบกรองอักขระที่ไม่ใช่ 0 และ 1 ออกให้โดยอัตโนมัติ</div>`;
-  }
-
-  complementResultContainer.innerHTML = `
-    ${warningHtml}
-    <div style="display: flex; flex-direction: column; gap: 12px;">
-      <div class="gate_card">
-        <div>
-          <span class="gate_label">Original Binary (${bitLength} bits):</span>
-          <p style="font-size: 0.82rem; color: var(--text-muted); margin-top: 2px;">บิตเครื่องหมาย (MSB) = <strong>${msb}</strong> &rarr; ${isNegative ? '<span style="color: #dc2626; font-weight: bold;">จำนวนติดลบ (-)</span>' : '<span style="color: #16a34a; font-weight: bold;">จำนวนบวก (+)</span>'}</p>
-        </div>
-        <code style="font-size: 1.15rem; font-weight: bold; color: #1e293b;">${escapeHTML(raw)}<sub>2</sub></code>
-      </div>
-      
-      <div class="gate_card">
-        <div>
-          <span class="gate_label">1's Complement (กลับบิต 0 &harr; 1):</span>
-          <p style="font-size: 0.82rem; color: var(--text-muted); margin-top: 2px;">Bitwise Inversion</p>
-        </div>
-        <code style="font-size: 1.15rem; font-weight: bold; color: #0284c7;">${escapeHTML(onesComp)}<sub>2</sub></code>
-      </div>
-
-      <div class="gate_card">
-        <div>
-          <span class="gate_label">2's Complement (1's Complement + 1):</span>
-          <p style="font-size: 0.82rem; color: var(--text-muted); margin-top: 2px;">รูปติดลบแท้จริงในระบบคอมพิวเตอร์</p>
-        </div>
-        <code style="font-size: 1.15rem; font-weight: bold; color: #16a34a;">${escapeHTML(twosComp)}<sub>2</sub></code>
-      </div>
-
-      <div class="gate_card" style="background: #faf5ff; border-color: #e9d5ff;">
-        <div>
-          <span class="gate_label" style="color: #6b21a8;">Signed Decimal Value (ค่าฐาน 10 มีเครื่องหมาย):</span>
-          <p style="font-size: 0.82rem; color: #7e22ce; margin-top: 2px;">ช่วงที่รองรับได้ใน ${bitLength} บิต: [${minSigned.toString()}, ${maxSigned.toString()}]</p>
-        </div>
-        <strong style="font-size: 1.35rem; color: #6b21a8;">${signedDec.toString()}<sub>10</sub></strong>
-      </div>
-
-      <div class="gate_card" style="background: #f8fafc; border-color: #cbd5e1;">
-        <div>
-          <span class="gate_label" style="color: #475569;">Unsigned Decimal Value (ค่าฐาน 10 ไม่มีเครื่องหมาย):</span>
-          <p style="font-size: 0.82rem; color: var(--text-muted); margin-top: 2px;">ช่วงที่รองรับได้: [0, ${maxUnsigned.toString()}]</p>
-        </div>
-        <strong style="font-size: 1.15rem; color: #334155;">${unsignedDec.toString()}<sub>10</sub></strong>
-      </div>
-    </div>
-  `;
+  tabStepExampleBtn.addEventListener('click', () => {
+    tabStepExampleBtn.classList.add('active');
+    tabLawsBtn.classList.remove('active');
+    stepExampleContent.style.display = 'block';
+    lawsContent.style.display = 'none';
+  });
 }
 
 /* ==========================================================================
@@ -1838,7 +1851,7 @@ restoreAppState();
 
 // Initial renders for modules
 renderBooleanAlgebra();
-renderComplementCalculator();
+
 calculateBaseArithmetic();
 setupClearButtons();
 
@@ -1857,3 +1870,42 @@ if ('serviceWorker' in navigator) {
       .catch((err) => console.log('Service Worker registration failed:', err));
   });
 }
+/* ==========================================================================
+   GLOBAL ACCORDION LOGIC
+   ========================================================================== */
+function initAccordions() {
+  const headers = document.querySelectorAll('.accordion_header');
+  headers.forEach(header => {
+    const targetId = header.getAttribute('data-target');
+    const targetBody = document.getElementById(targetId);
+    if (!targetBody) return;
+
+    const storageKey = 'accordion_state_' + targetId;
+    const savedState = localStorage.getItem(storageKey);
+    
+    // Default open if no saved state
+    if (savedState === 'closed') {
+      header.classList.remove('open');
+      targetBody.classList.remove('open');
+    } else {
+      header.classList.add('open');
+      targetBody.classList.add('open');
+    }
+
+    header.addEventListener('click', () => {
+      const isOpen = targetBody.classList.contains('open');
+      if (isOpen) {
+        header.classList.remove('open');
+        targetBody.classList.remove('open');
+        localStorage.setItem(storageKey, 'closed');
+      } else {
+        header.classList.add('open');
+        targetBody.classList.add('open');
+        localStorage.setItem(storageKey, 'open');
+      }
+    });
+  });
+}
+// Init immediately
+initAccordions();
+
