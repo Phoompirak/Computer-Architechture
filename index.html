@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cal Numberic & Boolean Algebra</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&display=swap"
+        rel="stylesheet">
+
+    <!-- icon -->
+    <link rel="icon" type="image/x-icon" href="public/icons/calculator.png">
+
+    <link rel="stylesheet" href="style.css">
+    <script src="main.js" defer></script>
+
+</head>
+
+<body>
+
+    <div class="app_container">
+        <header class="app_header">
+            <img src="public/icons/calculator.png" alt="calculator" class="logo_icon">
+            <div class="header_text">
+                <h1>Base Converter</h1>
+                <p class="subtitle">Computer Architecture Subject</p>
+            </div>
+        </header>
+
+        <main class="wrapper_numeric">
+            <div class="converter_card">
+                <div class="input_number_wrapper">
+                    <label for="inputNumberic" class="field_label">Enter Number</label>
+                    <div class="input_inner">
+                        <input type="text" id="inputNumberic" placeholder="Type a number (e.g. 1010, 1F, 255)" inputmode="numeric" autofocus>
+                    </div>
+                </div>
+
+                <div class="wrapper_selector">
+                    <div class="select_group">
+                        <label for="fromBaseNumericSelect">From Base</label>
+                        <select class="form-control" id="fromBaseNumericSelect">
+                            <option value="2">Binary (ฐาน 2)</option>
+                            <option value="8">Octal (ฐาน 8)</option>
+                            <option value="10">Decimal (ฐาน 10)</option>
+                            <option value="16" selected>Hexadecimal (ฐาน 16)</option>
+                        </select>
+                    </div>
+
+                    <div class="selector_arrow" aria-hidden="true">&rarr;</div>
+
+                    <div class="select_group">
+                        <label for="toBaseNumericSelect">To Base</label>
+                        <select class="form-control" id="toBaseNumericSelect">
+                            <option value="2">Binary (ฐาน 2)</option>
+                            <option value="8">Octal (ฐาน 8)</option>
+                            <option value="10" selected>Decimal (ฐาน 10)</option>
+                            <option value="16">Hexadecimal (ฐาน 16)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="outputNumberic" class="output-box" style="display: none;"></div>
+            </div>
+
+            <div class="steps-box">
+                <div class="tab-container">
+                    <button type="button" class="tab-btn active" id="tabStandardBtn">วิธีมาตรฐาน (หารสั้น/กระจายหลัก)</button>
+                    <button type="button" class="tab-btn" id="tabGroupingBtn">วิธีจัดกลุ่มบิต / ตารางเทียบ</button>
+                </div>
+                <div id="shortDivisionSteps"></div>
+            </div>
+        </main>
+    </div>
+
+</body>
+
+</html>
